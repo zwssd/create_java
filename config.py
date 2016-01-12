@@ -2,6 +2,6 @@
 
 #配置文件
 
-Path = 'Person'
-Name = 'Person'
+Path = 'Content'
+Name = 'Content'
 Parameters = 'id:String,name:String,sex:int,age:int'

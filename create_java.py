@@ -1,8 +1,22 @@
+#!/usr/bin/python
+#encoding=utf-8
+
 import os
 import sys
+import MySQLdb as mysql
+
 import config
+import db_config
+
 
 from string import Template
+
+#根据数据库的表自动生成jpa文件
+def jpaModel(parameters):
+    if not os.path.exists(parameters[2]):
+        os.mkdir(parameters[2])
+    results = connectDb()
+    jpamodelClass(parameters,results)
 
 def produceModel(parameters):
     print(parameters[2])
@@ -18,6 +32,55 @@ def produceService(parameters):
 def produceDao(parameters):
     daoInter(parameters)
     daoImpl(parameters)
+
+def connectDb():
+    print 'show columns from %s'%db_config.Table
+    connect = mysql.connect(user=db_config.User,passwd=db_config.Passwd,host=db_config.Host,db=db_config.Db,charset='utf8').cursor()
+    connect.execute('show columns from %s'%db_config.Table)
+    results=connect.fetchall()
+    return results
+
+def dbtype(db_column_type):
+    if "int" in db_column_type:
+        val = "int"
+    elif "char" in db_column_type:
+        val = "String"
+    elif "text" in db_column_type:
+        val = "String"
+    return val
+
+def jpamodelClass(parameters,results):
+    code = Template('''''package\n
+@Entity
+@Table(name="${tableName}")
+public class ${className}  implements Serializable{\n
+${attribute}
+${methods}
+}
+''')
+    name = parameters[0]    # class name
+    argv2 = parameters[1]
+    attribute = ""
+    methods = ""
+
+    for x in results:
+        propName = x[0]
+        propType = dbtype(x[1])
+        attribute += "\t@Column(name='" + propName + "');\n\tprivate " + propType + " " + propName +";\n\n"
+        methods += "\tpublic " + propType + " get" + propName + "() {\n\treturn " + propName + ";\n\t}\n\n"
+        methods += "\tpublic void set" + propName + "(" + propType + " " + propName + ") {\n\tthis." + propName + " = " + propName + ";\n\t}\n\n"
+
+    '''properties = argv2.split(",")
+    for x in range(len(properties)):
+        prop = properties[x].split(":")
+        propType = prop[1]
+        propName = prop[0]
+        attribute += "\tprivate " + propType + " " + propName + ";\n"
+        methods += "\tpublic "+propType+" set"+propName.capitalize()+"("+propType+" "+propName+") {\n\t\tthis."+propName+" = " + propName + ";\n\t}\n"
+        methods += "\tpublic void get"+propName.capitalize()+"() {\n\t\treturn "+propName+";\n\t}\n"'''
+
+    fileStr = code.substitute(tableName=db_config.Table, className=name, attribute=attribute, methods=methods)
+    saveFile(fileStr, parameters[2] + '/' + name+".java")
 
 def modelClass(parameters):
     code = Template('''''package\n
@@ -137,9 +200,10 @@ def main():
     if (number < 2):
         print "Error parameters"
     else :
-        produceModel(parameters);
-        produceService(parameters);
-        produceDao(parameters);
+        jpaModel(parameters)
+        #produceModel(parameters)
+        #produceService(parameters)
+        #produceDao(parameters)
 
 if __name__ == "__main__":
     main()
