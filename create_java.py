@@ -66,14 +66,21 @@ ${methods}
     path = parameters[2]
     attribute = ""
     methods = ""
+    x_first = True
 
     for x in results:
         propName = x[0]
         propType = dbtype(x[1])
         propNameCamel = underline_to_camel(x[0])
-        attribute += "\t@Column(name='" + propName + "');\n\tprivate " + propType + " " + propNameCamel +";\n\n"
-        methods += "\tpublic " + propType + " get" + propNameCamel + "() {\n\t\treturn " + propNameCamel + ";\n\t}\n\n"
-        methods += "\tpublic void set" + propNameCamel + "(" + propType + " " + propNameCamel + ") {\n\t\tthis." + \
+        if x_first:
+            attribute += "\t@Id\n\t@Column(name=\"" + propName + "\")\n\tprivate " + propType + " Id;\n\n"
+            methods += "\tpublic " + propType + " getId() {\n\t\treturn Id;\n\t}\n\n"
+            methods += "\tpublic void setId(" + propType + " Id) {\n\t\tthis.Id = Id;\n\t}\n\n"
+            x_first = False
+        else:
+            attribute += "\t@Column(name=\"" + propName + "\")\n\tprivate " + propType + " " + propNameCamel +";\n\n"
+            methods += "\tpublic " + propType + " get" + propNameCamel + "() {\n\t\treturn " + propNameCamel + ";\n\t}\n\n"
+            methods += "\tpublic void set" + propNameCamel + "(" + propType + " " + propNameCamel + ") {\n\t\tthis." + \
                    propNameCamel + " = " + propNameCamel + ";\n\t}\n\n"
 
     fileStr = code.substitute(tableName=db_config.Table, className=name, attribute=attribute, methods=methods)
@@ -100,7 +107,7 @@ ${param_notes}
 	 * @param ${column_first_type} ${column_first_name}
 	 * @return ${name}信息
 	 */
-	public ${name} findUserByName(${column_first_type} ${column_first_name});
+	public ${name} find${name}By${column_first_name}(${column_first_type} ${column_first_name});
 
 	/**
 	 * 删除一个${name}
@@ -150,41 +157,49 @@ public class ${name}ServiceImpl implements ${name}Service{
 ${param_notes}
 	 * @return ${name}信息
 	 */
+	@Override
     public ${name} create${name}(${param}){
-
+        // TODO Auto-generated method stub
+		return null;
     }
 
     /**
 	 * 查询全部
 	 * @return 全部${name}列表
 	 */
+	@Override
 	public List<${name}> findAll${name}s(){
-
+        // TODO Auto-generated method stub
+		return null;
 	}
 
 	/**
 	 * 根据${column_first_name}查询${name}信息
 	 * @param ${column_first_type} ${column_first_name}
-	 * @return ${column_first_type} ${column_first_name}信息
+	 * @return ${name}信息
 	 */
+	@Override
 	public ${name} find${name}By${column_first_name}(${column_first_type} ${column_first_name}){
-
+        // TODO Auto-generated method stub
+		return null;
 	}
 
 	/**
 	 * 删除一个${name}
 	 * @param ${column_first_type} ${column_first_name}
 	 */
+	@Override
 	public void remove${name}(${column_first_type} ${column_first_name}){
-
+        // TODO Auto-generated method stub
 	}
 
 	/**
 	 * 修改一个${name}
 	 * @param ${column_first_type} ${column_first_name}
 	 */
+	@Override
 	public void update${name}(${column_first_type} ${column_first_name}){
-
+        // TODO Auto-generated method stub
 	}
 }
 ''')
@@ -218,7 +233,7 @@ public interface ${name}Dao extends JpaRepository<${name}, Integer> {
 	/**
 	 * 根据${column_first_name}查询${name}信息
 	 * @param ${column_first_type} ${column_first_name}
-	 * @return ${column_first_type} ${column_first_name}信息
+	 * @return ${name} ${column_first_name}信息
 	 */
 	public ${name} find${name}By${column_first_name}(${column_first_type} ${column_first_name});
 }
