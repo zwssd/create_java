@@ -34,9 +34,8 @@ def produceService(parameters,results):
     serviceInter(parameters,results)
     serviceImpl(parameters,results)
 
-def produceDao(parameters):
-    daoInter(parameters)
-    daoImpl(parameters)
+def produceDao(parameters,results):
+    jpadaoInter(parameters,results)
 
 def connectDb():
     print 'show columns from %s'%db_config.Table
@@ -168,7 +167,7 @@ ${param_notes}
 	 * @param ${column_first_type} ${column_first_name}
 	 * @return ${column_first_type} ${column_first_name}信息
 	 */
-	public ${name} findUserByName(${column_first_type} ${column_first_name}){
+	public ${name} find${name}By${column_first_name}(${column_first_type} ${column_first_name}){
 
 	}
 
@@ -212,33 +211,37 @@ ${param_notes}
     fileStr = code.substitute(name=name,namelow=namelow,param_notes=param_notes,param=param,column_first_name=column_first_name,column_first_type=column_first_type)
     saveFile(fileStr, path + '/' + name+"ServiceImpl.java")
 
-def daoInter(parameters):
-    code = Template('''''package\n
-public interface ${name}Dao extends GenericDao<${name}, Integer> {
+def jpadaoInter(parameters,results):
+    code = Template('''package\n
+public interface ${name}Dao extends JpaRepository<${name}, Integer> {
 
-}
-''')
-    name = parameters[0]
-    fileStr = code.substitute(name=name)
-    saveFile(fileStr, parameters[2] + '/' + name+"Dao.java")
-
-def daoImpl(parameters):
-    code = Template('''''package\n
-public class ${name}ServiceImpl extends GenericManagerImpl<${name}, Integer>
-        implements ${name}Service{
-
-    private ${name}Dao ${namelow}Dao;
-
-    public ${name}ServiceImpl(${name}Dao ${namelow}Dao){
-        super(${namelow}Dao);
-        this.${namelow}Dao = ${namelow}Dao;
-    }
+	/**
+	 * 根据${column_first_name}查询${name}信息
+	 * @param ${column_first_type} ${column_first_name}
+	 * @return ${column_first_type} ${column_first_name}信息
+	 */
+	public ${name} find${name}By${column_first_name}(${column_first_type} ${column_first_name});
 }
 ''')
     name = parameters[0]
     namelow = name.lower()
-    fileStr = code.substitute(name=name, namelow=namelow)
-    saveFile(fileStr, parameters[2] + '/' + name+"DaoImpl.java")
+    path = parameters[2]
+    param_notes = ""
+    param = ""
+    column_first_name = ""
+    column_first_type = ""
+    column_first_bool = True
+    for x in results:
+        propName = x[0]
+        propType = dbtype(x[1])
+        propNameCamel = underline_to_camel(x[0])
+        if column_first_bool:
+            column_first_name = propNameCamel.encode("utf-8")
+            column_first_type = propType
+            column_first_bool = False
+        break
+    fileStr = code.substitute(name=name,column_first_name=column_first_name,column_first_type=column_first_type)
+    saveFile(fileStr, path + '/' + name+"Dao.java")
 
 def saveFile(code, path):
     print path
@@ -258,7 +261,7 @@ def main():
         results = connectDb()
         jpaProduceModel(parameters,results)
         produceService(parameters,results)
-        #produceDao(parameters)
+        produceDao(parameters,results)
 
 if __name__ == "__main__":
     main()
